@@ -8,55 +8,80 @@ namespace SimulatedTemperatureSensorModule
     public class DataGenerationPolicy
     {
         private static readonly Random rnd = new Random();
-        private double _normal;
+
+        private const double addOrderRate = 0.5;
+
+        private const double defectRate = 0.03;
 
         public DataGenerationPolicy()
         {
-            MachineTemperatureMin = 21;
-            MachineTemperatureMax = 100;
-            MachinePressureMin = 1;
-            MachinePressureMax = 10;
-            AmbientTemperature = 21;
-            HumidityPercentMin = 24;
-            HumidityPercentMax = 27;
-            _normal = (MachinePressureMax - MachinePressureMin) / (MachineTemperatureMax - MachineTemperatureMin);
+            OrdersTypeA = 0;
+            OrdersTypeB = 0;
+            OrdersTypeC = 0;
+            DefectsTypeA = 0;
+            DefectsTypeB = 0;
+            DefectsTypeC = 0;
         }
 
-        public double MachineTemperatureMin { get; private set; }
-        public double MachineTemperatureMax { get; private set; }
-        public double MachinePressureMin { get; private set; }
-        public double MachinePressureMax { get; private set; }
-        public double AmbientTemperature { get; private set; }
-        public int HumidityPercentMin { get; private set; }
-        public int HumidityPercentMax { get; set; }
+        public int OrdersTypeA { get; private set; }
+        public int OrdersTypeB { get; private set; }
+        public int OrdersTypeC { get; private set; }
+        public int DefectsTypeA { get; private set; }
+        public int DefectsTypeB { get; private set; }
+        public int DefectsTypeC { get; private set; }
 
-        public double CalculateMachineTemperature(double? currentTemperature = null)
+        public void IncreaseOrdersTypeA()
         {
-            var current = currentTemperature ?? MachineTemperatureMin;
-            if(current > MachineTemperatureMax)
+            if (rnd.NextDouble() > addOrderRate)
             {
-                current += rnd.NextDouble() - 0.5; // add value between [-0.5..0.5]
+                OrdersTypeA++;
             }
-            else
+        }
+
+        public void IncreaseOrdersTypeB()
+        {
+            if (rnd.NextDouble() > addOrderRate)
             {
-                current += -0.25 + (rnd.NextDouble() * 1.5); // add value between [-0.25..1.25] - avg +0.5
+                OrdersTypeB++;
             }
-            return current;
         }
 
-        public double CalculatePressure(double currentTemperature)
+        public void IncreaseOrdersTypeC()
         {
-            return MachinePressureMin + ((currentTemperature - MachineTemperatureMin) * _normal);
+            if (rnd.NextDouble() > addOrderRate)
+            {
+                OrdersTypeC++;
+            }
         }
 
-        public double CalculateAmbientTemperature()
+        public void IncreaseDefectsTypeA()
         {
-            return AmbientTemperature + rnd.NextDouble() -0.5;
+            int previousOrdersA = OrdersTypeA;
+            IncreaseOrdersTypeA();
+            if (OrdersTypeA > previousOrdersA && rnd.NextDouble() < defectRate)
+            {
+                DefectsTypeA++;
+            }            
         }
 
-        public int CalculateHumidity()
+        public void IncreaseDefectsTypeB()
         {
-            return rnd.Next(HumidityPercentMin, HumidityPercentMax);
+            int previousOrdersB = OrdersTypeB;
+            IncreaseOrdersTypeB();
+            if (OrdersTypeB > previousOrdersB && rnd.NextDouble() < defectRate)
+            {
+                DefectsTypeB++;
+            }
+        }
+
+        public void IncreaseDefectsTypeC()
+        {
+            int previousOrdersC = OrdersTypeC;
+            IncreaseOrdersTypeC();
+            if (OrdersTypeC > previousOrdersC && rnd.NextDouble() < defectRate)
+            {
+                DefectsTypeC++;
+            }
         }
     }
 }

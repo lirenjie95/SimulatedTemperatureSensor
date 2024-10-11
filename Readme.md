@@ -1,4 +1,4 @@
-# Simulated Temperature IoT Edge Module
+# Simulated IoT Edge Module: Sensor of a Factory
 This repository contains a tweaked Simulated Temperature Module for Azure IoT Edge. It is based on the [Simulated Temperature Sensor for Azure IoT Edge](https://github.com/Azure/iot-edge-v1/tree/a80857e05be0dc4bbc2de93555e6f83700c3d887/v2/samples/azureiotedge-simulated-temperature-sensor).
 
 This module is an example of a temperature sensor simulation Azure IoT Edge module. You can see its usage in the [Azure IoT Edge documentation](https://docs.microsoft.com/en-us/azure/iot-edge/). It continuously creates simulated temperature data and sends the message to the ```temperatureOutput``` endpoint.
@@ -23,16 +23,17 @@ The temperature simulator is producing a simulation on machine temperature / pre
 
 ```json
 {
-    "InstanceId": 1,
-    "machine": {
-        "temperature": 55.651076260675254,
-        "pressure": 4.9475909664060413
+    "orders": {
+        "typeA": 1,
+        "typeB": 2,
+        "typeC": 3,
     },
-    "ambient": {
-        "temperature": 21.195752660602217,
-        "humidity": 26
+    "defects": {
+        "typeA": 0,
+        "typeB": 0,
+        "typeC": 0,
     },
-    "timeCreated": "2018-02-09T10:53:32.2731850+00:00"
+    "timeCreated": "2024-02-09T10:53:32+00:00"
 }
 ```
 

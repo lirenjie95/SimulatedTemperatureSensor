@@ -11,7 +11,7 @@ namespace SimulatedTemperatureSensorModule
     {
         private bool _sendData = true;
         // in milliseconds
-        private int _sendInterval = 5000;
+        private int _sendInterval = 60000; // every minutes
         private int _instanceCount = 1;
 
         public void UpdateDesiredProperties(TwinCollection twinCollection)

@@ -8,36 +8,26 @@ namespace SimulatedTemperatureSensorModule
     public class TemperatureDataFactory
     {
         private static readonly Random rand = new Random();
-        private static double CurrentMachineTemperature;
-
-        public static MessageBody CreateTemperatureData(int counter, int instanceId, DataGenerationPolicy policy, bool reset = false)
+        
+        public static MessageBody CreateSensorData(DataGenerationPolicy policy)
         {
-            if (reset)
-            {
-                TemperatureDataFactory.CurrentMachineTemperature = policy.CalculateMachineTemperature();
-            }
-            else
-            {
-                TemperatureDataFactory.CurrentMachineTemperature =
-                    policy.CalculateMachineTemperature(TemperatureDataFactory.CurrentMachineTemperature);
-            }
-
-            var machinePressure = policy.CalculatePressure(TemperatureDataFactory.CurrentMachineTemperature);
-            var ambientTemperature = policy.CalculateAmbientTemperature();
-            var ambientHumidity = policy.CalculateHumidity();
-
+            policy = policy ?? new DataGenerationPolicy();
+            policy.IncreaseDefectsTypeA();
+            policy.IncreaseDefectsTypeB();
+            policy.IncreaseDefectsTypeC();
             var messageBody = new MessageBody
             {
-                InstanceId = instanceId,
-                Machine = new Machine
+                orders = new Orders
                 {
-                    Temperature = TemperatureDataFactory.CurrentMachineTemperature,
-                    Pressure = machinePressure
+                    typeA = policy.OrdersTypeA,
+                    typeB = policy.OrdersTypeB,
+                    typeC = policy.OrdersTypeC
                 },
-                Ambient = new Ambient
+                defects = new Defects
                 {
-                    Temperature = ambientTemperature,
-                    Humidity = ambientHumidity
+                    typeA = policy.DefectsTypeA,
+                    typeB = policy.DefectsTypeB,
+                    typeC = policy.DefectsTypeC
                 },
                 TimeCreated = string.Format("{0:O}", DateTime.Now)
             };

@@ -1,15 +1,11 @@
 using System;
-using System.IO;
-using System.Net;
-using System.Runtime.InteropServices;
+using System.Net.Http;
 using System.Runtime.Loader;
-using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Azure.Devices.Client;
 using Microsoft.Azure.Devices.Client.Transport.Mqtt;
-using Microsoft.Azure.Devices.Shared;
 using Newtonsoft.Json;
 
 namespace SimulatedTemperatureSensorModule
@@ -64,39 +60,19 @@ namespace SimulatedTemperatureSensorModule
             desiredProperties = new DesiredProperties();
             desiredProperties.UpdateDesiredProperties(moduleTwinCollection);
 
-            // callback for updating desired properties through the portal or rest api
-            await ioTHubModuleClient.SetDesiredPropertyUpdateCallbackAsync(onDesiredPropertiesUpdate, null);
-
-            // this direct method will allow to reset the temperature sensor values back to their initial state
-            await ioTHubModuleClient.SetMethodHandlerAsync("reset", ResetMethod, null);
-
-            // we don't pass ioTHubModuleClient as we're not sending any messages out to the message bus
-            await ioTHubModuleClient.SetInputMessageHandlerAsync("control", ControlMessageHandler, null);
-
             while (true)
             {
                 try
                 {
                     if (desiredProperties.SendData)
                     {
-                        for (int i = 0; i < desiredProperties.InstanceCount; i++)
-                        {
-                            counter++;
-                            if (counter == 1)
-                            {
-                                // first time execution needs to reset the data factory
-                                IsReset = true;
-                            }
+                        var messageBody = TemperatureDataFactory.CreateSensorData(generationPolicy);
+                        var messageString = JsonConvert.SerializeObject(messageBody);
+                        var messageBytes = Encoding.UTF8.GetBytes(messageString);
+                        var message = new Message(messageBytes);
 
-                            var messageBody = TemperatureDataFactory.CreateTemperatureData(counter, i, generationPolicy, IsReset);
-                            IsReset = false;
-                            var messageString = JsonConvert.SerializeObject(messageBody);
-                            var messageBytes = Encoding.UTF8.GetBytes(messageString);
-                            var message = new Message(messageBytes);
-
-                            await ioTHubModuleClient.SendEventAsync("temperatureOutput", message);
-                            Console.WriteLine($"\t{DateTime.UtcNow.ToShortDateString()} {DateTime.UtcNow.ToLongTimeString()}> Sending message: {counter}, Body: {messageString}");
-                        }
+                        await SendMessageToApi(messageString);
+                        Console.WriteLine($"\t{DateTime.UtcNow.ToShortDateString()} {DateTime.UtcNow.ToLongTimeString()}> Sending message: {counter}, Body: {messageString}");
                     }
                     await Task.Delay(TimeSpan.FromMilliseconds(desiredProperties.SendInterval));
                 }
@@ -108,51 +84,23 @@ namespace SimulatedTemperatureSensorModule
             }
         }
 
-        private static Task onDesiredPropertiesUpdate(TwinCollection twinCollection, object userContext)
+        static async Task SendMessageToApi(string messageString)
         {
-            desiredProperties.UpdateDesiredProperties(twinCollection);
-            return Task.CompletedTask;
-        }
-
-        private static Task<MethodResponse> ResetMethod(MethodRequest request, object userContext)
-        {
-            var response = new MethodResponse((int)HttpStatusCode.OK);
-            Console.WriteLine("Received reset command via direct method invocation");
-            Console.WriteLine("Resetting temperature sensor...");
-            IsReset = true;
-            return Task.FromResult(response);
-        }
-
-        private static Task<MessageResponse> ControlMessageHandler(Message message, object userContext)
-        {
-            var messageBytes = message.GetBytes();
-            var messageString = Encoding.UTF8.GetString(messageBytes);
-
-            Console.WriteLine($"Received message Body: [{messageString}]");
-
-            try
+            using (var httpClient = new HttpClient())
             {
-                var messages = JsonConvert.DeserializeObject<ControlCommand[]>(messageString);
-                foreach (ControlCommand messageBody in messages)
+                var content = new StringContent(messageString, Encoding.UTF8, "application/json");
+                var response = await httpClient.PostAsync("https://your-api-endpoint.com/submitData", content);
+
+                if (response.IsSuccessStatusCode)
                 {
-                    if (messageBody.Command == ControlCommandEnum.Reset)
-                    {
-                        Console.WriteLine("Resetting temperature sensor..");
-                        IsReset = true;
-                    }
-                    else
-                    {
-                        //NoOp
-                        Console.WriteLine("Received NOOP message");
-                    }
+                    var result = await response.Content.ReadAsStringAsync();
+                    Console.WriteLine($"Response from API: {result}");
+                }
+                else
+                {
+                    Console.WriteLine($"Error: {response.StatusCode}");
                 }
             }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"Failed to deserialize control command with exception: [{ex.Message}]");
-            }
-
-            return Task.FromResult(MessageResponse.Completed);
         }
     }
 }

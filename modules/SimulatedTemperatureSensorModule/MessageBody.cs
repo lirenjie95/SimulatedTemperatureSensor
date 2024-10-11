@@ -7,32 +7,33 @@ namespace SimulatedTemperatureSensorModule
 {
     public class MessageBody
     {
-        [JsonProperty("InstanceId")]
-        public int InstanceId { get; set; }
-
-        [JsonProperty("machine")]
-        public Machine Machine { get; set; }
-        [JsonProperty("ambient")]
-        public Ambient Ambient { get; set; }
+        [JsonProperty("orders")]
+        public Orders orders { get; set; }
+        [JsonProperty("defects")]
+        public Defects defects { get; set; }
         [JsonProperty("timeCreated")]
         public string TimeCreated { get; set; }
     }
 
-    [JsonObject("machine")]
-    public class Machine
+    [JsonObject("orders")]
+    public class Orders
     {
-        [JsonProperty("temperature")]
-        public double Temperature { get; set; }
-        [JsonProperty("pressure")]
-        public double Pressure { get; set; }
+        [JsonProperty("typeA")]
+        public int typeA { get; set; }
+        [JsonProperty("typeB")]
+        public int typeB { get; set; }
+        [JsonProperty("typeC")]
+        public int typeC { get; set; }
     }
 
-    [JsonObject("ambient")]
-    public class Ambient
+    [JsonObject("defects")]
+    public class Defects
     {
-        [JsonProperty("temperature")]
-        public double Temperature { get; set; }
-        [JsonProperty("humidity")]
-        public int Humidity { get; set; }
+        [JsonProperty("typeA")]
+        public int typeA { get; set; }
+        [JsonProperty("typeB")]
+        public int typeB { get; set; }
+        [JsonProperty("typeC")]
+        public int typeC { get; set; }
     }
 }
